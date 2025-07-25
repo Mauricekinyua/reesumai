@@ -1,10 +1,10 @@
 import Navbar from "~/components/Navbar";
 import type { Route } from "./+types/home";
-import { resumes } from "constants";
 import ResumeCard from "~/components/ResumeCard";
 import {usePuterStore} from "~/lib/puter";
-import {useLocation, useNavigate} from "react-router";
+import {useNavigate} from "react-router";
 import {useEffect} from "react";
+import {resumes} from "../../constants";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -19,7 +19,7 @@ export default function Home() {
   const navigate = useNavigate();
 
   useEffect(()=>{
-    if(!auth.isAuthenticated) navigate('/auth?next=/')
+    if(!auth.isAuthenticated) navigate('/');
   },[auth.isAuthenticated])
   return <main className="bg-[url('/images/bg-main.svg)] bg-cover">
 
