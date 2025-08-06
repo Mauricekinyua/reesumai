@@ -2,9 +2,9 @@ import Navbar from "~/components/Navbar";
 import type { Route } from "./+types/home";
 import ResumeCard from "~/components/ResumeCard";
 import {usePuterStore} from "~/lib/puter";
-import {useNavigate} from "react-router";
-import {useEffect} from "react";
-import {resumes} from "../../constants";
+import {Link, useNavigate} from "react-router";
+import {useEffect, useState} from "react";
+
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -15,12 +15,30 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Home() {
 
-  const { auth} = usePuterStore();
+  const { auth, kv } = usePuterStore();
   const navigate = useNavigate();
+  const [resume, setResume] = useState<Resume[]>([]);
+  const [loadingResume, setLoadingResume] = useState(false)
+
 
   useEffect(()=>{
-    if(!auth.isAuthenticated) navigate('/');
+    if(!auth.isAuthenticated) navigate('/auth?next=/');
   },[auth.isAuthenticated])
+  useEffect(() => {
+    const loadResumes = async()=>{
+      setLoadingResume(true);
+
+      const resumes = (await kv.list('resumes:*', true)) as KVItem[];
+
+      const parsedResume = resume?.map((resume)=>(
+          JSON.parse(resume.value) as Resume
+      ))
+      setResume(parsedResume || []);
+      setLoadingResume(false);
+    }
+    loadResumes()
+  }, []);
+
   return <main className="bg-[url('/images/bg-main.svg)] bg-cover">
 
     <Navbar/>
@@ -29,11 +47,18 @@ export default function Home() {
         <h1>Track Your Applications & Resume Ratings</h1>
         <h2>Review your submissions and check AI-Powered feedback</h2>
       </div>
-      {resumes.length > 0 &&(
+      {!loadingResume && resume.length > 0 &&(
           <div className="resumes-section">
-            {resumes.map((resume)=>(
+            {resume.map((resume)=>(
                 <ResumeCard key={resume.id} resume={resume}/>
             ))}
+          </div>
+      )}
+      {!loadingResume && resume?.length === 0 &&(
+          <div className='flex flex-col items-center justify-center mt-10 gap-4'>
+            <Link to='/upload' className='primary-button w-fit text-xl font-semibold'>
+              Upload Resume
+            </Link>
           </div>
       )}
       </section>
